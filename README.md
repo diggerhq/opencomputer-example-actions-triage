@@ -2,11 +2,12 @@
 
 This example starts a durable OpenComputer agent session whenever a selected
 GitHub Actions workflow fails. The agent analyzes the failed-step logs, states
-what is observed versus inferred, and publishes one triage report to a bound
-Slack conversation through an OpenComputer outbox.
+what is observed versus inferred, and sends one triage report directly through
+Slack's `chat.postMessage` API.
 
 The example is intentionally diagnostic. It cannot rerun workflows, modify a
-repository, open an issue, or call Slack directly.
+repository, or open an issue. Its only external write is one constrained Slack
+`chat.postMessage` call.
 
 ## How it works
 
@@ -15,15 +16,15 @@ failed GitHub Actions run
   -> workflow_run collector
   -> authenticated OpenComputer webhook
   -> durable actions-triage session
-  -> ci-triage outbox
-  -> configured Slack conversation
+  -> destination-constrained Slack API tool
+  -> configured Slack channel
 ```
 
 The collector sends workflow metadata and at most 24,000 characters of failed
 step logs. Logs and all GitHub-provided strings are treated as untrusted
 evidence, not instructions. The collector does not check out or execute code
 from the failed run. Common GitHub, AWS, and bearer-token shapes are masked
-before logs enter the model and before report text enters the outbox; this is a
+before logs enter the model and before report text is sent to Slack; this is a
 backstop, not a substitute for GitHub's own secret masking.
 
 ## Prerequisites
@@ -44,19 +45,35 @@ npm run dev
 The development command links or creates the OpenComputer project, syncs the
 agent, and prints its dashboard URL.
 
-## 2. Connect the Slack destination
+## 2. Configure Slack delivery
 
-In the project dashboard:
+Create a Slack app from the included `slack-app-manifest.yml`, install it to the
+Development workspace, and invite the bot to the test channel. The manifest
+requests only `chat:write`. Copy the **Bot User OAuth Token** and the channel's
+ID; use the ID such as `C0123456789`, not `#channel-name`.
 
-1. Select **Development** and open **Channels**.
-2. Connect Slack using the generated app manifest.
-3. Install the app and invite it to the public conversation that should receive
-   CI failures.
-4. Bind the code-defined `ci-failures` destination to that conversation and
-   verify it.
+Store the token as a destination-constrained OpenComputer managed secret:
 
-Development and Production use independent Slack installations and
-destination bindings.
+```bash
+npm run opencomputer -- secrets set SLACK_BOT_TOKEN \
+  --agent current \
+  --environment development
+```
+
+The CLI prompts for the value without putting it in shell history. The agent's
+declared connection permits this secret only for `POST` requests to
+`https://slack.com/api/chat.postMessage`.
+
+Store the non-secret channel ID as an environment-specific runtime variable:
+
+```bash
+npm run opencomputer -- env set SLACK_CHANNEL_ID \
+  --agent current \
+  --environment development
+```
+
+Restart the development watcher after changing the runtime variable so the
+agent runtime receives it.
 
 ## 3. Create the OpenComputer webhook
 
@@ -76,6 +93,31 @@ them as these GitHub Actions repository secrets:
 
 Never commit either value. Rotating the OpenComputer webhook token invalidates
 the old value immediately, so update the GitHub secret at the same time.
+
+### Smoke-test Slack before GitHub
+
+Invoke the webhook with a synthetic failure before installing the GitHub
+workflow. Enter the URL and token when prompted so neither appears in shell
+history:
+
+```bash
+printf 'OpenComputer webhook URL: '
+IFS= read -r OC_WEBHOOK_URL
+printf 'OpenComputer webhook token: '
+IFS= read -r -s OC_WEBHOOK_TOKEN
+echo
+
+curl --request POST "$OC_WEBHOOK_URL" \
+  --header "Authorization: Bearer $OC_WEBHOOK_TOKEN" \
+  --header 'Content-Type: application/json' \
+  --header "Idempotency-Key: manual-smoke-$(date +%s)" \
+  --data-binary @test/fixtures/failed-workflow.json
+
+unset OC_WEBHOOK_URL OC_WEBHOOK_TOKEN
+```
+
+Expect HTTP 202, a new durable session, and one message in the configured Slack
+channel. Use a new idempotency key for each intentional smoke test.
 
 ## 4. Choose workflows to monitor
 
@@ -107,13 +149,13 @@ The included `CI` workflow has a manual `force_failure` input:
 2. Open **Actions → CI → Run workflow**.
 3. Set `force_failure` to `true` and run it.
 4. Confirm **Triage failed GitHub Actions** receives HTTP 202 from the webhook.
-5. Inspect the durable session and the `ci-triage` outbox in OpenComputer.
+5. Inspect the durable session and managed-egress logs in OpenComputer.
 6. Confirm Slack receives one report with the run link, evidence, likely cause,
    and next steps.
 
 Re-delivering the same failed run attempt reuses the webhook idempotency key,
-and the agent's outbox publication is keyed to its durable session. A GitHub
-rerun has a new attempt number and produces a new triage report.
+so OpenComputer reuses its durable session. A GitHub rerun has a new attempt
+number and produces a new triage report.
 
 ## Develop and verify
 
@@ -122,8 +164,8 @@ npm test
 npm run build
 ```
 
-`npm run dev` compiles the complete OpenComputer project graph, including the
-agent, Slack channel, destination, outbox, and agent outbox registration.
+`npm run dev` compiles the agent and its destination-constrained Slack
+connection.
 
 ## Current limits
 
@@ -132,8 +174,12 @@ agent, Slack channel, destination, outbox, and agent outbox registration.
   runs.
 - Logs are capped at 24,000 characters. The Slack report says when evidence is
   missing or truncated and links to the complete GitHub run.
-- The outbox targets one bound Slack conversation. It does not map GitHub users
-  to Slack users or send direct messages.
+- Slack delivery is synchronous and best effort. There is no durable delivery
+  queue, independent retry, outbox inspection, or provider-level idempotency.
+  If Slack accepts a message but the response is lost, manually retrying the
+  tool could create a duplicate.
+- The tool sends only to the configured `SLACK_CHANNEL_ID`. It does not map
+  GitHub users to Slack users or send direct messages.
 - Fork pull-request failures may expose less log context depending on the
   repository's GitHub Actions policy.
 
