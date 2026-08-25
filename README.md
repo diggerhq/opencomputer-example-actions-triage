@@ -49,11 +49,17 @@ Development deployment as files change, and prints its dashboard URL.
 In the project dashboard:
 
 1. Select **Development** and open **Channels**.
-2. Connect Slack using the generated app manifest.
+2. Open the code-defined **Engineering Slack** channel and connect Slack using
+   its generated app manifest.
 3. Install the app and invite it to the public conversation that should receive
    CI failures.
 4. Bind the code-defined `ci-failures` destination to that conversation and
    verify it.
+
+`opencomputer/channels/team-slack.ts` defines the Slack app capabilities and
+the stable `ci-failures` destination name. The channel is the code-defined
+integration; the Slack app installation, credentials, and selected
+conversation remain environment-specific dashboard configuration.
 
 Development and Production use independent Slack installations and
 destination bindings.
@@ -107,9 +113,19 @@ The included `CI` workflow has a manual `force_failure` input:
 2. Open **Actions → CI → Run workflow**.
 3. Set `force_failure` to `true` and run it.
 4. Confirm **Triage failed GitHub Actions** receives HTTP 202 from the webhook.
-5. Inspect the durable session and the `ci-triage` outbox in OpenComputer.
-6. Confirm Slack receives one report with the run link, evidence, likely cause,
-   and next steps.
+5. Follow the `sessionUrl` printed by that workflow, or inspect **Sessions** and
+   the `ci-triage` outbox in the OpenComputer dashboard.
+6. Confirm Slack receives one report with a concise diagnosis and the GitHub
+   run link. The complete structured content remains inspectable in the
+   `ci-triage` outbox item.
+
+The result should look like this:
+
+![A GitHub Actions failure report delivered to Slack](docs/images/slack-triage-report.png)
+
+A new webhook delivery starts a session pinned to the Development deployment
+active at that moment. After changing agent code, start a new test run;
+steering an older session continues using that session's pinned deployment.
 
 Re-delivering the same failed run attempt reuses the webhook idempotency key,
 and the agent's outbox publication is keyed to its durable session. A GitHub
