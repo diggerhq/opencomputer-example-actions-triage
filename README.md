@@ -133,6 +133,9 @@ outbox registration.
   runs.
 - Logs are capped at 24,000 characters. The Slack report says when evidence is
   missing or truncated and links to the complete GitHub run.
+- Interactive questions are denied in `opencomputer/agents/actions-triage/opencode.json`.
+  Webhook runs record missing evidence as unknown and complete without waiting
+  for a human reply.
 - The outbox targets one bound Slack conversation. It does not map GitHub users
   to Slack users or send direct messages.
 - Fork pull-request failures may expose less log context depending on the
