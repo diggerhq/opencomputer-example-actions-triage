@@ -38,7 +38,7 @@ backstop, not a substitute for GitHub's own secret masking.
 ```bash
 npm install
 npm run opencomputer -- login
-npx opencomputer deploy --watch
+npm run deploy -- --watch
 ```
 
 The watch deployment links or creates the OpenComputer project, advances the
@@ -122,7 +122,7 @@ npm test
 npm run build
 ```
 
-`npx opencomputer deploy --watch` compiles the complete OpenComputer project
+`npm run deploy -- --watch` compiles the complete OpenComputer project
 graph, including the agent, Slack channel, destination, outbox, and agent
 outbox registration.
 
