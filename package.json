@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "opencomputer": "opencomputer",
-    "dev": "opencomputer dev",
     "build": "tsc --noEmit",
     "test": "tsx --test test/**/*.test.ts",
     "session": "opencomputer session",

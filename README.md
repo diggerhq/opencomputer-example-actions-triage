@@ -38,11 +38,11 @@ backstop, not a substitute for GitHub's own secret masking.
 ```bash
 npm install
 npm run opencomputer -- login
-npm run dev
+npx opencomputer deploy --watch
 ```
 
-The development command links or creates the OpenComputer project, syncs the
-agent, and prints its dashboard URL.
+The watch deployment links or creates the OpenComputer project, advances the
+Development deployment as files change, and prints its dashboard URL.
 
 ## 2. Connect the Slack destination
 
@@ -122,8 +122,9 @@ npm test
 npm run build
 ```
 
-`npm run dev` compiles the complete OpenComputer project graph, including the
-agent, Slack channel, destination, outbox, and agent outbox registration.
+`npx opencomputer deploy --watch` compiles the complete OpenComputer project
+graph, including the agent, Slack channel, destination, outbox, and agent
+outbox registration.
 
 ## Current limits
 
