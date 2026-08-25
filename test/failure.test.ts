@@ -3,7 +3,7 @@ import test from "node:test";
 import {
   parseWorkflowFailure,
   redactCredentialShapes,
-} from "../opencomputer/agents/actions-triage/failure.js";
+} from "../opencomputer/agents/actions-triage/tools/failure.js";
 
 test("parses a valid failed workflow payload", () => {
   const failure = parseWorkflowFailure({

@@ -1,5 +1,5 @@
 import { useInput, useModel, useTool } from "@opencomputer/agent";
-import { failureContext, parseWorkflowFailure } from "./failure.js";
+import { failureContext, parseWorkflowFailure } from "./tools/failure.js";
 import { publishTriage } from "./tools/publish-triage.js";
 
 export default function Agent() {

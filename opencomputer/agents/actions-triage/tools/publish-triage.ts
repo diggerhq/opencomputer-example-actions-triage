@@ -1,5 +1,5 @@
 import { defineTool, publishOutbox } from "@opencomputer/agent";
-import { redactCredentialShapes } from "../failure.js";
+import { redactCredentialShapes } from "./failure.js";
 
 type TriageInput = {
   title?: unknown;
