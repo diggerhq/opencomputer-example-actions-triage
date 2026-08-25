@@ -1,0 +1,26 @@
+{
+  "name": "opencomputer-example-actions-triage",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "opencomputer": "opencomputer",
+    "dev": "opencomputer dev",
+    "build": "tsc --noEmit",
+    "test": "tsx --test test/**/*.test.ts",
+    "session": "opencomputer session",
+    "deploy": "opencomputer deploy"
+  },
+  "dependencies": {
+    "@opencomputer/agent": "^0.5.2"
+  },
+  "devDependencies": {
+    "@opencomputer/cli": "^0.6.1",
+    "@types/node": "^24.0.0",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
