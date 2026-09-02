@@ -8,6 +8,8 @@ Slack conversation through an OpenComputer outbox.
 The example is intentionally diagnostic. It cannot rerun workflows, modify a
 repository, open an issue, or call Slack directly.
 
+[Deploy to OpenComputer →](https://app.opencomputer.dev/new?repository-url=https%3A%2F%2Fgithub.com%2Fdiggerhq%2Fopencomputer-example-actions-triage)
+
 ## How it works
 
 ```text

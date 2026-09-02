@@ -1,0 +1,11 @@
+schema = 1
+
+[template]
+name = "GitHub Actions Triage"
+description = "Diagnose failed GitHub Actions runs and deliver reports through a configured Slack channel."
+documentation = "https://docs.opencomputer.dev/agents/examples/github-actions-triage"
+default_project_name = "github-actions-triage"
+
+[template.first_run]
+agent = "actions-triage"
+prompt = "Explain how this agent handles a failed workflow and what must be configured before the first live run."
